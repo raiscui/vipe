@@ -63,6 +63,22 @@ With pixi, we run the CLI directly from source by default:
 pixi run infer YOUR_VIDEO.mp4
 ```
 
+If you want to type `vipe ...` directly (without `pixi run` / `pixi shell`), you can install a small wrapper script into your PATH:
+
+```bash
+# Install a wrapper into ~/.local/bin/vipe by default
+pixi run install-cli
+
+# Now you can run the CLI from anywhere
+vipe infer YOUR_VIDEO.mp4
+```
+
+To uninstall the wrapper:
+
+```bash
+pixi run uninstall-cli
+```
+
 If you have installed the package (e.g. `pixi run install-vipe` or the legacy conda + pip steps), you can use the `vipe` CLI to process raw videos in mp4 format.
 
 ```bash

@@ -105,3 +105,8 @@ run = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/b
 # 可选: 如果你确实需要 `vipe` 这个可执行文件(入口脚本),再执行一次 editable 安装。
 # 注意: 这会触发 CUDA 扩展编译,耗时较长。
 install-vipe = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc pip install --no-build-isolation -e ."
+
+# 可选: 将 `vipe` 命令安装到 `~/.local/bin` 这类全局 PATH 目录里。
+# 这样你不需要手动 `pixi run ...`/`pixi shell`,也能直接在任意目录执行 `vipe ...`。
+install-cli = "bash scripts/pixi/install_cli.sh"
+uninstall-cli = "bash scripts/pixi/uninstall_cli.sh"
