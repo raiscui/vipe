@@ -22,7 +22,51 @@ class BertModelWarper(nn.Module):
 
         self.get_extended_attention_mask = bert_model.get_extended_attention_mask
         self.invert_attention_mask = bert_model.invert_attention_mask
-        self.get_head_mask = bert_model.get_head_mask
+
+        # transformers==5.x 开始移除了 BertModel.get_head_mask。
+        # GroundingDINO 的这份代码原本是复用 transformers 里对 head_mask 的处理逻辑。
+        # 为了兼容新版本,我们在 wrapper 内实现一个等价的 `get_head_mask`。
+
+    def get_head_mask(self, head_mask, num_hidden_layers: int, is_attention_chunked: bool = False):
+        """把用户传入的 head_mask 规范化成 transformers 旧版期望的形状.
+
+        兼容逻辑(与 transformers 4.x/旧版一致):
+        - None: 返回一个长度为 num_hidden_layers 的列表,每层都是 None。
+        - 1D: [num_heads] -> [num_hidden_layers, 1, num_heads, 1, 1]
+        - 2D: [num_hidden_layers, num_heads] -> [num_hidden_layers, 1, num_heads, 1, 1]
+
+        注意:
+        - 这里不做额外的 expand 到 batch/seq_len,下游 attention 会按需 broadcast。
+        """
+
+        # 常见路径: 不使用 head_mask,直接返回每层 None,避免多余张量分配。
+        if head_mask is None:
+            return [None] * num_hidden_layers
+
+        # 让 dtype 与模型参数保持一致,避免混合精度场景下产生隐性类型问题。
+        try:
+            target_dtype = next(self.parameters()).dtype
+        except StopIteration:
+            target_dtype = torch.float32
+
+        # 1D head_mask: [num_heads] -> [1, 1, num_heads, 1, 1] -> expand 到每一层
+        if head_mask.dim() == 1:
+            head_mask = head_mask.unsqueeze(0).unsqueeze(0).unsqueeze(-1).unsqueeze(-1)
+            head_mask = head_mask.expand(num_hidden_layers, -1, -1, -1, -1)
+        # 2D head_mask: [num_hidden_layers, num_heads] -> [num_hidden_layers, 1, num_heads, 1, 1]
+        elif head_mask.dim() == 2:
+            head_mask = head_mask.unsqueeze(1).unsqueeze(-1).unsqueeze(-1)
+
+        if head_mask.dim() != 5:
+            raise ValueError(f"head_mask 维度非法,期望 1D/2D,实际为 {head_mask.dim()}D")
+
+        head_mask = head_mask.to(dtype=target_dtype)
+
+        # attention 分块(chunk)场景下需要额外维度(保持与旧 transformers 行为一致)。
+        if is_attention_chunked:
+            head_mask = head_mask.unsqueeze(-1)
+
+        return head_mask
 
     def forward(
         self,
@@ -94,6 +138,13 @@ class BertModelWarper(nn.Module):
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
+        # transformers 5.x 的 attention mask 工具函数签名有变化.
+        # 这里统一拿到一个"模型参数 dtype",用于 mask 的 dtype 选择,避免把 device 误当 dtype 传进去。
+        try:
+            model_dtype = next(self.parameters()).dtype
+        except StopIteration:
+            model_dtype = torch.float32
+
         # past_key_values_length
         past_key_values_length = (
             past_key_values[0][0].shape[2] if past_key_values is not None else 0
@@ -108,9 +159,16 @@ class BertModelWarper(nn.Module):
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
-        extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(
-            attention_mask, input_shape, device
-        )
+        # 注意: transformers 4.x 与 5.x 的签名不同:
+        # - 4.x: get_extended_attention_mask(attention_mask, input_shape, device)
+        # - 5.x: get_extended_attention_mask(attention_mask, input_shape, dtype=None)
+        # 这里用 try/except 兼容两种调用方式。
+        try:
+            extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(
+                attention_mask, input_shape, dtype=model_dtype
+            )
+        except TypeError:
+            extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape, device)
 
         # If a 2D or 3D attention mask is provided for the cross-attention
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
