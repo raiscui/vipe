@@ -15,7 +15,31 @@ We use ViPE to annotate a large-scale collection of videos. This collection incl
 
 ## Installation
 
-To ensure the reproducibility, we recommend creating the runtime environment using [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html).
+To ensure the reproducibility, we recommend creating the runtime environment using [pixi](https://pixi.sh/).
+
+```bash
+# Install everything into `.pixi/` based on `pixi.lock`
+pixi install --locked
+
+# Run ViPE (from source)
+pixi run infer YOUR_VIDEO.mp4
+
+# Or run the more flexible script entry
+pixi run run pipeline=default streams=raw_mp4_stream streams.base_path=YOUR_VIDEO_OR_DIR_PATH
+```
+
+> Notes:
+> - The default pixi configuration is for `linux-64` with CUDA 12 and uses the PyTorch CUDA wheels index (`cu128`).
+> - If you need a different CUDA / a CPU-only setup, adjust the `torch` / `torchvision` entries in `pyproject.toml`.
+> - If some registries are unreachable in your network, you can set a proxy temporarily:
+>   ```bash
+>   export https_proxy=http://127.0.0.1:7897 http_proxy=http://127.0.0.1:7897 all_proxy=socks5://127.0.0.1:7897
+>   ```
+>   Please avoid running `pixi install` repeatedly if you care about traffic.
+
+### Legacy (Conda + pip)
+
+If you prefer conda + pip, you can still use the original installation steps:
 
 ```bash
 # Create a new conda environment and install 3rd-party dependencies
@@ -33,7 +57,13 @@ pip install --no-build-isolation -e .
 
 ### Using the ViPE CLI
 
-Once the python package is installed, you can use the `vipe` CLI to process raw videos in mp4 format.
+With pixi, we run the CLI directly from source by default:
+
+```bash
+pixi run infer YOUR_VIDEO.mp4
+```
+
+If you have installed the package (e.g. `pixi run install-vipe` or the legacy conda + pip steps), you can use the `vipe` CLI to process raw videos in mp4 format.
 
 ```bash
 # Replace YOUR_VIDEO.mp4 with the path to your video. We provide sample videos in assets/examples.

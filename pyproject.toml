@@ -31,7 +31,7 @@ dependencies = [
     "timm",
     "transformers",
     "gdown",
-    "OpenEXR",
+    "OpenEXR<3.3.0",
     "kornia",
     "viser",
     "click",
@@ -44,3 +44,64 @@ dav3 = [
 
 [project.scripts]
 vipe = "vipe.cli.main:main"
+
+# -----------------------------------------------------------------------------
+# Pixi: 环境管理(替代 conda env + pip requirements)
+# -----------------------------------------------------------------------------
+#
+# 说明:
+# - pixi 支持把 `pyproject.toml` 当作 manifest 使用(不需要新增 `pixi.toml`)。
+# - 本项目如果执行 `pip install -e .` 会编译 CUDAExtension,并且 `setup.py` 会 import torch。
+#   pixi 的 conda-first 解算阶段不会先安装 PyPI 包,因此不把本项目作为 PyPI path 依赖写入 pixi 配置。
+#   实际运行时我们直接 `pixi run python -m vipe.cli.main ...`,需要时再手工安装(见 tasks)。
+#
+[tool.pixi.workspace]
+channels = ["https://prefix.dev/conda-forge", "https://prefix.dev/nvidia"]
+platforms = ["linux-64"]
+channel-priority = "strict"
+# 说明:
+# - pixi 在 conda-first 解析后,需要一份"conda 包名 -> PyPI 包名"的映射来继续解算 PyPI 依赖。
+# - 默认映射会从 GitHub raw 下载,但某些网络环境可能无法访问该域名,导致 `pixi lock` 失败。
+# - 这里显式指定一个空映射文件,让 pixi 不再尝试联网获取默认映射。
+conda-pypi-map = { "https://prefix.dev/conda-forge" = "envs/conda_pypi_map.json", "https://prefix.dev/nvidia" = "envs/conda_pypi_map.json" }
+
+[tool.pixi.system-requirements]
+cuda = "12"
+
+[tool.pixi.dependencies]
+python = "3.10.*"
+pip = "*"
+cuda-nvcc = "*"
+eigen = "*"
+zlib = "*"
+libcusparse-dev = "*"
+libcublas-dev = "*"
+libcusolver-dev = "*"
+
+[tool.pixi.pypi-dependencies]
+# CUDA 版本专用 wheel 索引(等价于 README 里 pip 的 --extra-index-url)
+torch = { version = "==2.7.0+cu128", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = "==0.22.0+cu128", index = "https://download.pytorch.org/whl/cu128" }
+
+# `envs/requirements.in` 里存在,但并未在 `[project.dependencies]` 里声明的运行依赖
+hydra-core = "*"
+ray = "*"
+ninja = "*"
+matplotlib = "*"
+
+[tool.pixi.activation]
+# 固定 CUDA 工具链来源,避免继承宿主机 `CUDA_HOME=/usr/local/cuda` 导致 JIT 编译失败
+scripts = ["scripts/pixi/activate.sh"]
+
+[tool.pixi.tasks]
+# 直接从源码运行 CLI(无需安装 `vipe` 入口)
+vipe = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python -m vipe.cli.main"
+# 常用子命令做成 task,便于少打字,并且可以继续追加参数:
+# - `pixi run infer YOUR_VIDEO.mp4`
+infer = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python -m vipe.cli.main infer"
+visualize = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python -m vipe.cli.main visualize"
+run = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python run.py"
+
+# 可选: 如果你确实需要 `vipe` 这个可执行文件(入口脚本),再执行一次 editable 安装。
+# 注意: 这会触发 CUDA 扩展编译,耗时较长。
+install-vipe = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc pip install --no-build-isolation -e ."
