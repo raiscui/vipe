@@ -50,19 +50,19 @@ vipe = "vipe.cli.main:main"
 # -----------------------------------------------------------------------------
 #
 # 说明:
-# - pixi 支持把 `pyproject.toml` 当作 manifest 使用(不需要新增 `pixi.toml`)。
-# - 本项目如果执行 `pip install -e .` 会编译 CUDAExtension,并且 `setup.py` 会 import torch。
-#   pixi 的 conda-first 解算阶段不会先安装 PyPI 包,因此不把本项目作为 PyPI path 依赖写入 pixi 配置。
-#   实际运行时我们直接 `pixi run python -m vipe.cli.main ...`,需要时再手工安装(见 tasks)。
+# - pixi 支持把 `pyproject.toml` 当作 manifest 使用(不需要新增 `pixi.toml`).
+# - 本项目如果执行 `pip install -e .` 会编译 CUDAExtension,并且 `setup.py` 会 import torch.
+#   pixi 的 conda-first 解算阶段不会先安装 PyPI 包,因此不把本项目作为 PyPI path 依赖写入 pixi 配置.
+#   实际运行时我们直接 `pixi run python -m vipe.cli.main ...`,需要时再手工安装(见 tasks).
 #
 [tool.pixi.workspace]
 channels = ["https://prefix.dev/conda-forge", "https://prefix.dev/nvidia"]
 platforms = ["linux-64"]
 channel-priority = "strict"
 # 说明:
-# - pixi 在 conda-first 解析后,需要一份"conda 包名 -> PyPI 包名"的映射来继续解算 PyPI 依赖。
-# - 默认映射会从 GitHub raw 下载,但某些网络环境可能无法访问该域名,导致 `pixi lock` 失败。
-# - 这里显式指定一个空映射文件,让 pixi 不再尝试联网获取默认映射。
+# - pixi 在 conda-first 解析后,需要一份"conda 包名 -> PyPI 包名"的映射来继续解算 PyPI 依赖.
+# - 默认映射会从 GitHub raw 下载,但某些网络环境可能无法访问该域名,导致 `pixi lock` 失败.
+# - 这里显式指定一个空映射文件,让 pixi 不再尝试联网获取默认映射.
 conda-pypi-map = { "https://prefix.dev/conda-forge" = "envs/conda_pypi_map.json", "https://prefix.dev/nvidia" = "envs/conda_pypi_map.json" }
 
 [tool.pixi.system-requirements]
@@ -95,6 +95,19 @@ matplotlib = "*"
 #   "Using SOCKS proxy, but the 'socksio' package is not installed."
 socksio = "*"
 
+# Lyra pipeline 依赖:
+# - `configs/pipeline/lyra.yaml` 会启用 MoGe 作为关键帧深度模型.
+# - MoGe 目前只提供 git 安装方式,因此用 git 依赖写法.
+# - 注意: 这只会安装代码. 模型权重仍会在首次运行时从 Hugging Face 下载.
+# 注意: 这里显式 pin 到具体 commit,避免 `pixi install --locked` 判定 lockfile "不够确定".
+# 如需升级 MoGe,请同时更新此 rev 并重新 `pixi lock`.
+moge = { git = "https://github.com/microsoft/MoGe.git", rev = "07444410f1e33f402353b99d6ccd26bd31e469e8" }
+
+# MoGe 的上游依赖里包含 2 个 git 包.
+# pixi 在 `--locked` 模式下会校验 git ref,因此这里也显式 pin 到 lockfile 当前使用的 commit.
+utils3d = { git = "https://github.com/EasternJournalist/utils3d.git", rev = "3fab839f0be9931dac7c8488eb0e1600c236e183" }
+pipeline = { git = "https://github.com/EasternJournalist/pipeline.git", rev = "866f059d2a05cde05e4a52211ec5051fd5f276d6" }
+
 [tool.pixi.activation]
 # 固定 CUDA 工具链来源,避免继承宿主机 `CUDA_HOME=/usr/local/cuda` 导致 JIT 编译失败
 scripts = ["scripts/pixi/activate.sh"]
@@ -108,11 +121,11 @@ infer = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX
 visualize = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python -m vipe.cli.main visualize"
 run = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc python run.py"
 
-# 可选: 如果你确实需要 `vipe` 这个可执行文件(入口脚本),再执行一次 editable 安装。
-# 注意: 这会触发 CUDA 扩展编译,耗时较长。
+# 可选: 如果你确实需要 `vipe` 这个可执行文件(入口脚本),再执行一次 editable 安装.
+# 注意: 这会触发 CUDA 扩展编译,耗时较长.
 install-vipe = "CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc pip install --no-build-isolation -e ."
 
-# 可选: 将 `vipe` 命令安装到 `~/.local/bin` 这类全局 PATH 目录里。
-# 这样你不需要手动 `pixi run ...`/`pixi shell`,也能直接在任意目录执行 `vipe ...`。
+# 可选: 将 `vipe` 命令安装到 `~/.local/bin` 这类全局 PATH 目录里.
+# 这样你不需要手动 `pixi run ...`/`pixi shell`,也能直接在任意目录执行 `vipe ...`.
 install-cli = "bash scripts/pixi/install_cli.sh"
 uninstall-cli = "bash scripts/pixi/uninstall_cli.sh"

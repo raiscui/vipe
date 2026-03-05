@@ -14,8 +14,8 @@ set -euo pipefail
 # - `./scripts/pixi/uninstall_cli.sh --bin-dir /some/bin`
 #
 # 保护措施:
-# - 只会删除由 `install_cli.sh` 生成的脚本(通过 marker 识别)。
-# - 如果目标文件不是我们生成的,会拒绝删除,避免误伤用户自己的命令。
+# - 只会删除由 `install_cli.sh` 生成的脚本(通过 marker 识别).
+# - 如果目标文件不是我们生成的,会拒绝删除,避免误伤用户自己的命令.
 
 printUsage() {
   cat <<'USAGE'

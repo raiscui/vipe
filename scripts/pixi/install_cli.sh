@@ -7,13 +7,13 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 #
 # 你得到什么:
-# - 安装后你可以在任意目录直接执行 `vipe ...`。
-# - 这个 `vipe` 实际会固定使用当前仓库的 `.pixi/envs/default` 作为运行环境。
+# - 安装后你可以在任意目录直接执行 `vipe ...`.
+# - 这个 `vipe` 实际会固定使用当前仓库的 `.pixi/envs/default` 作为运行环境.
 #
 # 为什么要这样做:
-# - `pixi run install-vipe` 只会把入口装进 `.pixi/envs/default/bin/vipe`。
-# - 这个路径默认不在 PATH 里,所以你在普通 shell 里直接输入 `vipe` 会找不到命令。
-# - 另外,直接跑也容易继承宿主机的 `CUDA_HOME=/usr/local/cuda`,导致 torch JIT 编译扩展失败。
+# - `pixi run install-vipe` 只会把入口装进 `.pixi/envs/default/bin/vipe`.
+# - 这个路径默认不在 PATH 里,所以你在普通 shell 里直接输入 `vipe` 会找不到命令.
+# - 另外,直接跑也容易继承宿主机的 `CUDA_HOME=/usr/local/cuda`,导致 torch JIT 编译扩展失败.
 #
 # 默认安装位置:
 # - /usr/local/bin/vipe
@@ -109,11 +109,11 @@ set -euo pipefail
 # vipe-cli-shim: generated-by=scripts/pixi/install_cli.sh
 # -----------------------------------------------------------------------------
 # 说明:
-# - 这是一个"入口包装脚本",让你不必每次都手动执行 pixi 命令。
-# - 它会固定使用当前仓库的 pixi 环境来运行 ViPE CLI。
+# - 这是一个"入口包装脚本",让你不必每次都手动执行 pixi 命令.
+# - 它会固定使用当前仓库的 pixi 环境来运行 ViPE CLI.
 #
 # 注意:
-# - 这个脚本绑定了仓库路径. 如果你移动/重命名仓库目录,请重新执行安装脚本生成新的入口。
+# - 这个脚本绑定了仓库路径. 如果你移动/重命名仓库目录,请重新执行安装脚本生成新的入口.
 # -----------------------------------------------------------------------------
 
 repoRoot="${repoRootEscaped}"
@@ -125,15 +125,15 @@ if [ ! -x "\${pixiEnv}/bin/python" ]; then
   exit 1
 fi
 
-# 把 pixi 环境的可执行文件优先放到 PATH,避免调用到系统同名命令。
+# 把 pixi 环境的可执行文件优先放到 PATH,避免调用到系统同名命令.
 export PATH="\${pixiEnv}/bin:\${PATH}"
 
-# 关键行为: 不切换工作目录(cwd)。
-# - 这样用户传入的相对路径(比如 ./video.mp4)会基于"你运行 vipe 时的目录"解析,符合直觉。
-# - 我们通过 PYTHONPATH 注入源码路径,确保即使不在仓库目录也能 import vipe。
+# 关键行为: 不切换工作目录(cwd).
+# - 这样用户传入的相对路径(比如 ./video.mp4)会基于"你运行 vipe 时的目录"解析,符合直觉.
+# - 我们通过 PYTHONPATH 注入源码路径,确保即使不在仓库目录也能 import vipe.
 export PYTHONPATH="\${repoRoot}:\${PYTHONPATH:-}"
 
-# 固定 CUDA 工具链来源,避免继承宿主机 CUDA_HOME 导致 JIT 编译失败。
+# 固定 CUDA 工具链来源,避免继承宿主机 CUDA_HOME 导致 JIT 编译失败.
 if [ -d "\${pixiEnv}/targets/x86_64-linux" ]; then
   export CUDA_HOME="\${pixiEnv}/targets/x86_64-linux"
   export CUDA_PATH="\${CUDA_HOME}"
@@ -142,7 +142,7 @@ if [ -x "\${pixiEnv}/bin/nvcc" ]; then
   export PYTORCH_NVCC="\${pixiEnv}/bin/nvcc"
 fi
 
-# 从源码运行,避免必须先做 editable 安装。
+# 从源码运行,避免必须先做 editable 安装.
 exec "\${pixiEnv}/bin/python" -m vipe.cli.main "\$@"
 EOF
 

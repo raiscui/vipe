@@ -5,21 +5,21 @@
 # -----------------------------------------------------------------------------
 #
 # 目的:
-# - 避免继承宿主机的 `CUDA_HOME=/usr/local/cuda`,导致 torch 在 JIT 编译扩展时误用系统 nvcc。
+# - 避免继承宿主机的 `CUDA_HOME=/usr/local/cuda`,导致 torch 在 JIT 编译扩展时误用系统 nvcc.
 # - 强制使用 pixi/conda 环境内的 CUDA 工具链,提升可复现性,也避免常见的 "nvcc 不支持当前 GCC"
-#   这类报错。
+#   这类报错.
 #
 # 背景:
-# - ViPE 会在首次 import 时通过 `torch.utils.cpp_extension.load` JIT 编译扩展。
-# - torch 的 cpp_extension 会优先读取 `CUDA_HOME` 来定位 CUDA headers/libs。
-# - 在一些镜像/主机环境中,系统 CUDA 版本可能偏旧,对 GCC 版本支持滞后,导致编译直接失败。
+# - ViPE 会在首次 import 时通过 `torch.utils.cpp_extension.load` JIT 编译扩展.
+# - torch 的 cpp_extension 会优先读取 `CUDA_HOME` 来定位 CUDA headers/libs.
+# - 在一些镜像/主机环境中,系统 CUDA 版本可能偏旧,对 GCC 版本支持滞后,导致编译直接失败.
 #
 # 约定:
-# - pixi 会设置 `CONDA_PREFIX` 指向当前环境目录。
-# - conda 的 CUDA headers 通常位于 `$CONDA_PREFIX/targets/x86_64-linux/include`。
+# - pixi 会设置 `CONDA_PREFIX` 指向当前环境目录.
+# - conda 的 CUDA headers 通常位于 `$CONDA_PREFIX/targets/x86_64-linux/include`.
 
 if [ -z "${CONDA_PREFIX:-}" ]; then
-  # 没有激活 conda/pixi 环境时,不做任何事。
+  # 没有激活 conda/pixi 环境时,不做任何事.
   return 0 2>/dev/null || exit 0
 fi
 
