@@ -137,3 +137,7 @@
 
 - 完成了什么: 已在 `BertModelWarper` 内实现 `get_head_mask`,并用 try/except 兼容 `get_extended_attention_mask` 在 transformers 4.x/5.x 的不同签名。
 - 验证方式: 用随机初始化的 `BertModel` 做最小 forward 自测,确认 wrapper 不再因 API 变动崩溃。
+
+### 2026-03-05
+
+- 配置调整: 将 git 的 `origin` remote 的 push URL 改为 `https://github.com/raiscui/vipe.git`,让 `git push` 默认推送到 fork(`raiscui/vipe`),同时 `git pull` 仍从上游(`nv-tlabs/vipe`)获取更新。

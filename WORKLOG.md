@@ -20,3 +20,4 @@
 - 默认路径: 将 wrapper 默认安装目录改为 `/usr/local/bin`,并在权限不足时给出明确提示,降低首次使用的困惑。
 - 修复路径解析: wrapper 不再 `cd` 到仓库目录,相对路径改为按用户调用 vipe 时的当前目录解析,避免跨仓库/跨目录运行时误判 "文件不存在"。
 - 兼容 transformers 5.x: 修复 GroundingDINO 的 `BertModelWarper` 对已移除 API(`get_head_mask`)的依赖,并适配 `get_extended_attention_mask` 的新签名,避免运行期崩溃。
+- Git 默认推送: 设置 `origin` 的 push URL 为 `https://github.com/raiscui/vipe.git`,避免误推到上游仓库导致 403,并保持 pull 仍从上游获取更新。
