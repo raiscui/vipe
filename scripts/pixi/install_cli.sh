@@ -43,6 +43,12 @@ USAGE
 binDir="${VIPE_CLI_BIN_DIR:-${HOME}/.local/bin}"
 while [ $# -gt 0 ]; do
   case "${1}" in
+    --)
+      # 兼容常见的 "--" 分隔写法,例如:
+      #   pixi run install-cli -- --bin-dir /some/bin
+      #   bash scripts/pixi/install_cli.sh -- --bin-dir /some/bin
+      shift
+      ;;
     --bin-dir)
       if [ $# -lt 2 ]; then
         echo "错误: --bin-dir 需要一个参数" >&2
@@ -129,4 +135,3 @@ chmod +x "${target}"
 echo "已安装: ${target}"
 echo "提示: 如果终端提示 'command not found: vipe',通常是 PATH 里没有 '${binDir}'"
 echo "提示: 如果你移动了仓库目录,需要重新运行本脚本更新入口里的 repoRoot"
-

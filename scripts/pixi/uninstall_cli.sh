@@ -31,6 +31,12 @@ USAGE
 binDir="${VIPE_CLI_BIN_DIR:-${HOME}/.local/bin}"
 while [ $# -gt 0 ]; do
   case "${1}" in
+    --)
+      # 兼容常见的 "--" 分隔写法,例如:
+      #   pixi run uninstall-cli -- --bin-dir /some/bin
+      #   bash scripts/pixi/uninstall_cli.sh -- --bin-dir /some/bin
+      shift
+      ;;
     --bin-dir)
       if [ $# -lt 2 ]; then
         echo "错误: --bin-dir 需要一个参数" >&2
@@ -67,4 +73,3 @@ fi
 
 rm -f "${target}"
 echo "已卸载: ${target}"
-
