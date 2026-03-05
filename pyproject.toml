@@ -89,6 +89,12 @@ ray = "*"
 ninja = "*"
 matplotlib = "*"
 
+# 代理兼容:
+# - 用户常用 `all_proxy=socks5://...` 进行网络访问.
+# - huggingface_hub 使用 httpx,当检测到 SOCKS proxy 时需要 `socksio`,否则会报:
+#   "Using SOCKS proxy, but the 'socksio' package is not installed."
+socksio = "*"
+
 [tool.pixi.activation]
 # 固定 CUDA 工具链来源,避免继承宿主机 `CUDA_HOME=/usr/local/cuda` 导致 JIT 编译失败
 scripts = ["scripts/pixi/activate.sh"]
