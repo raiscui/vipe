@@ -128,6 +128,11 @@ fi
 # 把 pixi 环境的可执行文件优先放到 PATH,避免调用到系统同名命令。
 export PATH="\${pixiEnv}/bin:\${PATH}"
 
+# 关键行为: 不切换工作目录(cwd)。
+# - 这样用户传入的相对路径(比如 ./video.mp4)会基于"你运行 vipe 时的目录"解析,符合直觉。
+# - 我们通过 PYTHONPATH 注入源码路径,确保即使不在仓库目录也能 import vipe。
+export PYTHONPATH="\${repoRoot}:\${PYTHONPATH:-}"
+
 # 固定 CUDA 工具链来源,避免继承宿主机 CUDA_HOME 导致 JIT 编译失败。
 if [ -d "\${pixiEnv}/targets/x86_64-linux" ]; then
   export CUDA_HOME="\${pixiEnv}/targets/x86_64-linux"
@@ -136,8 +141,6 @@ fi
 if [ -x "\${pixiEnv}/bin/nvcc" ]; then
   export PYTORCH_NVCC="\${pixiEnv}/bin/nvcc"
 fi
-
-cd "\${repoRoot}"
 
 # 从源码运行,避免必须先做 editable 安装。
 exec "\${pixiEnv}/bin/python" -m vipe.cli.main "\$@"
