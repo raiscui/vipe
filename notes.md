@@ -94,3 +94,28 @@
 
 - `python -m py_compile` 覆盖改动文件,确保语法正确。
 - `python -c "import moge; import moge.model.v2"` 做 import 级验证,避免触发权重下载。
+
+## 2026-03-05: Video-Depth-Anything 权重缓存损坏(vipe)
+
+### 现象
+
+- `vipe infer -p lyra` 在 SLAM 跑完后进入后处理阶段崩溃.
+- 堆栈显示在加载 Video-Depth-Anything 权重时失败:
+  - `RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory`
+
+### 根因
+
+- 本地缓存的 `video_depth_anything_vitl.pth` 文件不完整/损坏.
+- 典型触发场景:
+  - 网络抖动/代理不稳定
+  - 下载过程中进程被中断(例如 Ctrl+C/kill)
+  - 结果是缓存文件已落盘,但内容不完整,下次直接复用缓存就必崩.
+
+### 修复策略(省流量优先)
+
+1. 优先复用 `torch.hub` 已有缓存:
+   - 如果缓存文件可正常 `torch.load`,直接用,不重新下载.
+2. 如果检测到缓存损坏:
+   - 自动删除坏缓存,然后改用 `huggingface_hub.hf_hub_download` 下载(更稳,支持更好的缓存语义).
+3. 兜底:
+   - 极简环境缺少 `huggingface_hub` 时,回退到 `torch.hub.load_state_dict_from_url`,并在损坏时自动清理缓存后重试 1 次.

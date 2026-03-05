@@ -26,3 +26,4 @@
 ## 2026-03-05
 
 - MoGe v2: `keyframe_depth` 支持 `moge-v1`/`moge-v2`,lyra pipeline 默认切到 `moge-v2` 并加载 `Ruicheng/moge-2-vitl`,避免 v1/v2 checkpoint 结构不匹配导致加载崩溃。
+- Video-Depth-Anything: 修复权重缓存损坏导致的 `failed finding central directory` 崩溃,自动删除坏缓存并重试下载(优先复用本地缓存,省流量)。

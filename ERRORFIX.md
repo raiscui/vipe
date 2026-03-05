@@ -30,3 +30,31 @@
 - import 级验证(不触发权重下载):
   - `import moge.model.v1` 和 `import moge.model.v2` 均可用.
   - `_normalize_moge_version(...)` 对空值默认返回 `v2`.
+
+## 2026-03-05
+
+### 问题
+
+- 运行 `vipe infer -p lyra` 时,SLAM 已完成,在后处理阶段崩溃.
+- 报错信息为:
+  - `RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory`
+
+### 根因
+
+- Video-Depth-Anything 的权重文件缓存损坏/不完整(典型是下载被中断或网络抖动).
+- 旧实现用 `torch.hub.load_state_dict_from_url` 直接复用缓存文件,一旦缓存坏了就会稳定复现崩溃.
+
+### 修复
+
+- `vipe/priors/depth/videodepthanything/__init__.py` 增加"损坏缓存自动恢复"逻辑:
+  1. 先尝试复用 `torch.hub` 的本地缓存(可用就不下载,省流量).
+  2. 如果检测到缓存损坏,自动删除坏文件.
+  3. 优先用 `huggingface_hub.hf_hub_download` 下载并加载(更稳的缓存/下载语义).
+  4. 如果环境缺少 `huggingface_hub`,回退到 `torch.hub.load_state_dict_from_url`,并在损坏时清缓存后重试 1 次.
+
+### 验证(不走真实下载)
+
+- `python -m py_compile vipe/priors/depth/videodepthanything/__init__.py`
+- 用 monkeypatch 模拟:
+  - 第一次加载抛 "failed finding central directory"
+  - 断言缓存文件会被删除,并且第二次能成功返回 state_dict
