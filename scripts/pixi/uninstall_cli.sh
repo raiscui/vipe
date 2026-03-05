@@ -7,7 +7,7 @@ set -euo pipefail
 # -----------------------------------------------------------------------------
 #
 # 默认卸载位置:
-# - ~/.local/bin/vipe
+# - /usr/local/bin/vipe
 #
 # 自定义卸载位置(二选一):
 # - `VIPE_CLI_BIN_DIR=/some/bin ./scripts/pixi/uninstall_cli.sh`
@@ -23,12 +23,12 @@ printUsage() {
   scripts/pixi/uninstall_cli.sh [--bin-dir <DIR>]
 
 说明:
-  - 默认从 ~/.local/bin/vipe 卸载
+  - 默认从 /usr/local/bin/vipe 卸载
   - 可通过环境变量 VIPE_CLI_BIN_DIR 或 --bin-dir 指定目录
 USAGE
 }
 
-binDir="${VIPE_CLI_BIN_DIR:-${HOME}/.local/bin}"
+binDir="${VIPE_CLI_BIN_DIR:-/usr/local/bin}"
 while [ $# -gt 0 ]; do
   case "${1}" in
     --)
@@ -71,5 +71,9 @@ if ! grep -q "vipe-cli-shim: generated-by=scripts/pixi/install_cli.sh" "${target
   exit 1
 fi
 
-rm -f "${target}"
+if ! rm -f "${target}"; then
+  echo "错误: 删除失败: ${target}" >&2
+  echo "提示: 可能是权限不足. 你可以尝试 sudo,或选择一个你有权限的 --bin-dir." >&2
+  exit 1
+fi
 echo "已卸载: ${target}"

@@ -16,7 +16,7 @@ set -euo pipefail
 # - 另外,直接跑也容易继承宿主机的 `CUDA_HOME=/usr/local/cuda`,导致 torch JIT 编译扩展失败。
 #
 # 默认安装位置:
-# - ~/.local/bin/vipe
+# - /usr/local/bin/vipe
 #
 # 自定义安装位置(二选一):
 # - `VIPE_CLI_BIN_DIR=/some/bin ./scripts/pixi/install_cli.sh`
@@ -31,7 +31,7 @@ printUsage() {
   scripts/pixi/install_cli.sh [--bin-dir <DIR>]
 
 说明:
-  - 默认安装到 ~/.local/bin/vipe
+  - 默认安装到 /usr/local/bin/vipe
   - 可通过环境变量 VIPE_CLI_BIN_DIR 或 --bin-dir 指定安装目录
 
 示例:
@@ -40,7 +40,7 @@ printUsage() {
 USAGE
 }
 
-binDir="${VIPE_CLI_BIN_DIR:-${HOME}/.local/bin}"
+binDir="${VIPE_CLI_BIN_DIR:-/usr/local/bin}"
 while [ $# -gt 0 ]; do
   case "${1}" in
     --)
@@ -73,7 +73,20 @@ scriptDir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 repoRoot="$(cd "${scriptDir}/../.." && pwd -P)"
 pixiEnv="${repoRoot}/.pixi/envs/default"
 
-mkdir -p "${binDir}"
+if [ ! -d "${binDir}" ]; then
+  if ! mkdir -p "${binDir}" 2>/dev/null; then
+    echo "错误: 无法创建目录: ${binDir}" >&2
+    echo "提示: 你可以用 --bin-dir 指定一个可写且在 PATH 里的目录." >&2
+    exit 1
+  fi
+fi
+
+if [ ! -w "${binDir}" ]; then
+  echo "错误: 没有写入权限: ${binDir}" >&2
+  echo "提示: 你可以用 --bin-dir 指定一个可写且在 PATH 里的目录." >&2
+  echo "提示: 或者用 sudo 运行该命令(会写入系统目录)." >&2
+  exit 1
+fi
 
 target="${binDir}/vipe"
 

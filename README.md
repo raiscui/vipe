@@ -66,7 +66,7 @@ pixi run infer YOUR_VIDEO.mp4
 If you want to type `vipe ...` directly (without `pixi run` / `pixi shell`), you can install a small wrapper script into your PATH:
 
 ```bash
-# Install a wrapper into ~/.local/bin/vipe by default
+# Install a wrapper into /usr/local/bin/vipe by default
 pixi run install-cli
 
 # Now you can run the CLI from anywhere
