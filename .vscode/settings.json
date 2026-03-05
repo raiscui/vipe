@@ -57,4 +57,14 @@
         "dense": "cpp",
         "*.tcc": "cpp"
     },
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#b857a4",
+        "activityBar.background": "#b857a4",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#aabd62",
+        "activityBarBadge.foreground": "#15202b",
+        "sash.hoverBorder": "#b857a4"
+    },
+    "peacock.remoteColor": "#9b4188",
 }
