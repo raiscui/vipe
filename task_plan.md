@@ -141,3 +141,9 @@
 ### 2026-03-05
 
 - 配置调整: 将 git 的 `origin` remote 的 push URL 改为 `https://github.com/raiscui/vipe.git`,让 `git push` 默认推送到 fork(`raiscui/vipe`),同时 `git pull` 仍从上游(`nv-tlabs/vipe`)获取更新。
+
+### 2026-03-05
+
+- 发生了什么: 用户在设置 `all_proxy=socks5://...` 后运行 `vipe infer`,huggingface_hub 通过 httpx 初始化代理时报错:
+  - `ImportError: Using SOCKS proxy, but the 'socksio' package is not installed.`
+- 我将怎么处理: 将 `socksio` 加入 pixi 的 PyPI 依赖,并更新 `pixi.lock`,确保在 SOCKS 代理场景下可用。

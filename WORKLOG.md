@@ -21,3 +21,4 @@
 - 修复路径解析: wrapper 不再 `cd` 到仓库目录,相对路径改为按用户调用 vipe 时的当前目录解析,避免跨仓库/跨目录运行时误判 "文件不存在"。
 - 兼容 transformers 5.x: 修复 GroundingDINO 的 `BertModelWarper` 对已移除 API(`get_head_mask`)的依赖,并适配 `get_extended_attention_mask` 的新签名,避免运行期崩溃。
 - Git 默认推送: 设置 `origin` 的 push URL 为 `https://github.com/raiscui/vipe.git`,避免误推到上游仓库导致 403,并保持 pull 仍从上游获取更新。
+- SOCKS 代理兼容: 增加 `socksio` 到 pixi PyPI 依赖并更新 lock,修复 `all_proxy=socks5://...` 场景下 huggingface_hub/httpx 报 "socksio not installed"。
