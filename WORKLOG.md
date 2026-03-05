@@ -22,3 +22,7 @@
 - 兼容 transformers 5.x: 修复 GroundingDINO 的 `BertModelWarper` 对已移除 API(`get_head_mask`)的依赖,并适配 `get_extended_attention_mask` 的新签名,避免运行期崩溃。
 - Git 默认推送: 设置 `origin` 的 push URL 为 `https://github.com/raiscui/vipe.git`,避免误推到上游仓库导致 403,并保持 pull 仍从上游获取更新。
 - SOCKS 代理兼容: 增加 `socksio` 到 pixi PyPI 依赖并更新 lock,修复 `all_proxy=socks5://...` 场景下 huggingface_hub/httpx 报 "socksio not installed"。
+
+## 2026-03-05
+
+- MoGe v2: `keyframe_depth` 支持 `moge-v1`/`moge-v2`,lyra pipeline 默认切到 `moge-v2` 并加载 `Ruicheng/moge-2-vitl`,避免 v1/v2 checkpoint 结构不匹配导致加载崩溃。

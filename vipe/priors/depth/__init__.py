@@ -17,10 +17,11 @@ from .base import DepthEstimationInput, DepthEstimationModel, DepthEstimationRes
 
 
 def make_depth_model(model: str):
+    # 约定: 只按第一个 "-" 分割,避免未来引入多段子参数时直接解包报错
     if "-" not in model:
         model_name, model_sub = model, ""
     else:
-        model_name, model_sub = model.split("-")
+        model_name, model_sub = model.split("-", 1)
 
     if model_name == "metric3d":
         from .metric3d import Metric3DDepthModel
@@ -35,7 +36,7 @@ def make_depth_model(model: str):
     elif model_name == "moge":
         from .moge import MogeModel
 
-        return MogeModel()
+        return MogeModel(version=model_sub)
 
     elif model_name == "dav3":
         from .dav3 import DepthAnything3Model

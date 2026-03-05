@@ -64,3 +64,33 @@
   - `PYTORCH_NVCC=$CONDA_PREFIX/bin/nvcc`
   - `CUDA_HOME=$CONDA_PREFIX/targets/x86_64-linux`
   - 建议把它们封装进 pixi tasks,避免每次手打。
+
+## 2026-03-05: MoGe v2 适配(vipe)
+
+### 现象
+
+- `vipe infer -p lyra` 在构建关键帧深度模型阶段报错,提示 `moge is not found in the environment`.
+- 在 lyra 的经验里,当用 v1 的 `MoGeModel` 去加载 v2 checkpoint(例如 `Ruicheng/moge-2-vitl`)时,还会触发:
+  - `TypeError: getattr(): attribute name must be string`
+
+### 根因(推断 + 代码证据)
+
+- `vipe/priors/depth/moge.py` 当前写死:
+  - import: `from moge.model.v1 import MoGeModel`
+  - checkpoint: `Ruicheng/moge-vitl`
+- 当环境里安装的是 MoGe v2 代码,或用户想用 v2 checkpoint 时,上述固定写法会导致:
+  - import 路径/版本不匹配(表现为 import 失败,被当作 "moge 未安装")
+  - 或 v1/v2 结构不匹配(表现为 getattr 的 TypeError)
+
+### 方案
+
+- 在 `make_depth_model(...)` 支持 `moge-v1`/`moge-v2` 这种可读的选择方式。
+- `MogeModel` 内部按 version 选择 `moge.model.v1` 或 `moge.model.v2`,并分别加载:
+  - v1: `Ruicheng/moge-vitl`
+  - v2: `Ruicheng/moge-2-vitl`
+- `configs/pipeline/lyra.yaml` 默认切换为 `keyframe_depth: moge-v2`。
+
+### 最小验证(省流量)
+
+- `python -m py_compile` 覆盖改动文件,确保语法正确。
+- `python -c "import moge; import moge.model.v2"` 做 import 级验证,避免触发权重下载。

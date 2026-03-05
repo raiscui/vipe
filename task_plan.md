@@ -147,3 +147,30 @@
 - 发生了什么: 用户在设置 `all_proxy=socks5://...` 后运行 `vipe infer`,huggingface_hub 通过 httpx 初始化代理时报错:
   - `ImportError: Using SOCKS proxy, but the 'socksio' package is not installed.`
 - 我将怎么处理: 将 `socksio` 加入 pixi 的 PyPI 依赖,并更新 `pixi.lock`,确保在 SOCKS 代理场景下可用。
+
+# -----------------------------------------------------------------------------
+# 任务计划: MoGe 深度模型切换到 v2(vipe)
+# -----------------------------------------------------------------------------
+
+## 目标
+
+让 `vipe infer -p lyra` 默认使用 MoGe v2 模型(`Ruicheng/moge-2-vitl`)做关键帧深度估计。
+同时保留 v1 的可选回退,避免未来更换 checkpoint 时再次踩到 v1/v2 结构不匹配的问题。
+
+## 阶段
+
+- [x] 阶段1: 复现与定位
+- [x] 阶段2: 方案设计与确认
+- [x] 阶段3: 代码改造与配置调整
+- [x] 阶段4: 最小验证(不浪费流量)
+- [ ] 阶段5: 提交/推送与记录归档
+
+## 关键问题
+
+1. `vipe/priors/depth/moge.py` 当前固定 import `moge.model.v1` 并加载 v1 checkpoint,需要改为 v2.
+2. 配置层如何表达 v1/v2 选择,并且不破坏现有 `keyframe_depth: moge` 的语义?
+3. 验证要避免重复下载大模型(节省代理流量)。
+
+## 状态
+
+**目前在阶段5**: 提交并推送到 `raiscui/vipe`,同时把修复记录追加到 WORKLOG/ERRORFIX。

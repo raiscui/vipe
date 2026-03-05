@@ -2,7 +2,8 @@ defaults:
   - default
 
 slam:
-  keyframe_depth: moge
+  # MoGe 默认使用 v2 模型,避免 v1/v2 checkpoint 结构不匹配导致加载崩溃
+  keyframe_depth: moge-v2
 
 post:
   depth_align_model: "adaptive_moge_vda"
